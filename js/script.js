@@ -31,7 +31,7 @@ function bindSlideToggle(trigger, boxBody,content, openClass) {
     });
 }
 
-bindSlideToggle('.hamburger', '[data-slide="nav"]', '.header__menu', 'slide-active')
+bindSlideToggle('.hamburger', '[data-slide="nav"]', '.header__menu', 'slide-active');
 
 //переход в ночной режим 
 
@@ -101,8 +101,87 @@ more.addEventListener('click', () => {
             </div>        
         `;
         videosWrapper.appendChild(card);
-        setTimeout(() =>{
+        setTimeout(() => {
             card.classList.remove('videos__item-active');
         }, 10); //выполнится через 10 мс
+        bindNewModal(card);
+    }
+    sliceTitle(".videos__item-descr", 100);
+});
+
+//обрезание заголовков
+function sliceTitle(selector, count){
+    document.querySelectorAll(selector).forEach(item => {
+        item.textContent.trim();
+        if (item.textContent.length < count) {
+            return;
+        } else {
+            const str = item.textContent.slice(0, count+1) + "...";
+            item.textContent = str;
+        }
+    });
+}
+
+sliceTitle(".videos__item-descr", 100);
+
+//модальное окно
+function openModal(){
+    modal.style.display = 'block';
+}
+
+function closeModal(){
+    modal.style.display = 'none';
+    player.stopVideo();     //функция от API
+}
+
+function bindModal(cards) {
+    cards.forEach(item => {
+        item.addEventListener('click', (event) => {      //при клике на каждое видео
+            event.preventDefault();                      //отмена стандратного поведения
+            const id = item.getAttribute('data-url');
+            loadVideo(id);
+            openModal();
+        });
+    });
+}
+
+bindModal(videos);
+//для новых элементов
+function bindNewModal(cards) {
+    cards.addEventListener('click', (event) => {      //при клике на каждое видео
+        event.preventDefault();//отмена стандратного поведения
+        const id = cards.getAttribute('data-url');
+        loadVideo(id);
+        openModal();
+    });
+}
+
+modal.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('modal__body')) {  //если клик вне модального окна
+        closeModal();
     }
 });
+
+function createVideoPlayer() {
+    var tag = document.createElement('script');
+
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);    //подставляет скрипт первым
+
+    setTimeout(() => {                              //создаем с задержкой, чтобы скрипт успел подгрузиться
+        player = new YT.Player('frame', {                  //создаем новый экземплря плеера
+            height: '100%',                             //100% родителя      
+            width: '100%',
+            videoId: 'M7lc1UVf-VE',
+        });
+    }, 300);
+        
+
+}
+
+createVideoPlayer();
+
+function loadVideo(id) {
+    player.loadVideoById({'videoId': `${id}`});
+}
