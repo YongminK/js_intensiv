@@ -78,43 +78,88 @@ switcher.addEventListener('change', () => {
 });
 
 //динамическое создание карточек видео
-const data = [ ['img/thumb_3.webp', 'img/thumb_4.webp', 'img/thumb_5.webp'],
-            ['#3 Верстка на flexbox CSS | Блок преимущества и галерея | Марафон верстки | Артем Исламов', 
-                '#2 Установка spikmi и работа с ветками на Github | Марафон вёрстки Урок 2', 
-                '#1 Верстка реального заказа landing Page | Марафон вёрстки | Артём Исламов'], 
-            ['3,6 тыс. просмотров', '4,2 тыс. просмотров', '28 тыс. просмотров'], 
-            ['X9SmcY3lM-U', '7BvHoh0BrMw', 'mC8JW_aG2EM'] 
-];
+// const data = [ ['img/thumb_3.webp', 'img/thumb_4.webp', 'img/thumb_5.webp'],
+//             ['#3 Верстка на flexbox CSS | Блок преимущества и галерея | Марафон верстки | Артем Исламов', 
+//                 '#2 Установка spikmi и работа с ветками на Github | Марафон вёрстки Урок 2', 
+//                 '#1 Верстка реального заказа landing Page | Марафон вёрстки | Артём Исламов'], 
+//             ['3,6 тыс. просмотров', '4,2 тыс. просмотров', '28 тыс. просмотров'], 
+//             ['X9SmcY3lM-U', '7BvHoh0BrMw', 'mC8JW_aG2EM'] 
+// ];
+
+// more.addEventListener('click', () => {
+//     const videosWrapper = document.querySelector('.videos__wrapper');
+//     more.remove();
+
+//     for (let i = 0; i < data[0].length; i++) {
+//         let card = document.createElement('a');
+//         card.classList.add('videos__item','videos__item-active');
+//         card.setAttribute('data-url', data[3][i]);
+//         //интерполяция
+//         card.innerHTML = `
+//             <img src="${data[0][i]}" alt="thumb">
+//             <div class="videos__item-descr">
+//                 ${data[1][i]}
+//             </div>
+//             <div class="videos__item-views">
+//                 ${data[2][i]}
+//             </div>        
+//         `;
+//         videosWrapper.appendChild(card);
+//         setTimeout(() => {
+//             card.classList.remove('videos__item-active');
+//         }, 10); //выполнится через 10 мс
+//         bindNewModal(card);
+//     }
+//     sliceTitle(".videos__item-descr", 100);
+//     if(night){
+//         nightMode();
+//     }
+// });
+
+function load() {
+    gapi.client.init({
+        'apiKey': 'AIzaSyDTw43xl7OenajThIOLL5dPP4SHxcTFq2U',
+        'discoveryDocs': ["https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest"]
+    }).then(function() {
+        return gapi.client.youtube.videos.list({
+            "part": "id, contentDetails, snippet",
+            "id": "oKeTsK1_lGU"
+        })
+    }).then(function (response) {
+        const videosWrapper = document.querySelector('.videos__wrapper');
+        console.log(response.result);
+        response.result.items.forEach(item => {
+            let card = document.createElement('a');
+            card.classList.add('videos__item','videos__item-active');
+            card.setAttribute('data-url', item.contentDetails.Id);
+            //интерполяция
+            card.innerHTML = `
+                <img src="${item.snippet.thumbnails.high.url}" alt="thumb">
+                <div class="videos__item-descr">
+                    ${item.snippet.title}
+                </div>
+    
+            `;
+            videosWrapper.appendChild(card);
+            setTimeout(() => {
+                card.classList.remove('videos__item-active');
+            }, 10); //выполнится через 10 мс
+            if(night){
+                    nightMode();
+                }
+        });
+        sliceTitle(".videos__item-descr", 100);
+        bindModal(document.querySelectorAll('.videos__item'));
+    }).catch(e => {
+        console.log(e);
+    });
+}
 
 more.addEventListener('click', () => {
-    const videosWrapper = document.querySelector('.videos__wrapper');
     more.remove();
-
-    for (let i = 0; i < data[0].length; i++) {
-        let card = document.createElement('a');
-        card.classList.add('videos__item','videos__item-active');
-        card.setAttribute('data-url', data[3][i]);
-        //интерполяция
-        card.innerHTML = `
-            <img src="${data[0][i]}" alt="thumb">
-            <div class="videos__item-descr">
-                ${data[1][i]}
-            </div>
-            <div class="videos__item-views">
-                ${data[2][i]}
-            </div>        
-        `;
-        videosWrapper.appendChild(card);
-        setTimeout(() => {
-            card.classList.remove('videos__item-active');
-        }, 10); //выполнится через 10 мс
-        bindNewModal(card);
-    }
-    sliceTitle(".videos__item-descr", 100);
-    if(night){
-        nightMode();
-    }
+    gapi.load('client', load);              //запрос на клиентский сервер функцией load
 });
+
 
 //обрезание заголовков
 function sliceTitle(selector, count){
@@ -165,6 +210,12 @@ function bindNewModal(cards) {
 
 modal.addEventListener('click', (e) => {
     if (!e.target.classList.contains('modal__body')) {  //если клик вне модального окна
+        closeModal();
+    }
+});
+
+document.addEventListener('keydown', function (event){
+    if (event.keyCode === 27) {                             //esc
         closeModal();
     }
 });
